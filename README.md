@@ -15,7 +15,7 @@
 	- Python 3.x: https://www.python.org/downloads/
 	- Sublime Text 3.x: https://www.sublimetext.com/3
 
-2. Download and run a script
+2. Download and run Integrated-builder.py
 3. It will install itself and show instructions
 
 
