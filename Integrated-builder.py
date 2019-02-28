@@ -123,7 +123,7 @@ class build():
 				try:
 					os.startfile('\"' + str(self.pybuild) + '\"')
 				except:
-					print('Sorry, file can not be executed.')
+					print('Sorry, the file can not be executed.')
 
 			except py_compile.PyCompileError as error:
 				error = str(error).replace('  File "' + self.path + '", ', '')
@@ -264,7 +264,8 @@ class build():
 				comm = '\"' + str(self.path).replace('.c', '.exe') + '\"'
 				os.startfile(comm)
 		except:
-			print('The file can not be executed')
+			print('Sorry, the file can not be executed')
+			self.clear()
 
 	def clear(self):
 		"""
