@@ -174,7 +174,7 @@ class build():
 			return 1: File must be compiled
 			return 0: Compilation not needed
 		'''
-		Letters = {'ä': '\\x84 \b', 'Ä' : '\\x8E \b', 'ö': '\\x94 \b', 'Ö' : '\\x99 \b', '°' : '\\xF8 \b', '€':'e'}
+		Letters = {'ä': '\\x84 \b', 'Ä' : '\\x8E \b', 'ö': '\\x94 \b', 'Ö' : '\\x99 \b'}
 		#Taulukko löytyy täältä: https://en.wikipedia.org/wiki/Code_page_850
 		
 		#avataan lähdefile
