@@ -13,13 +13,12 @@
 - Windows OS
 - Python 3.x: https://www.python.org/downloads/
 - Sublime Text 3.x: https://www.sublimetext.com/3
-- Optional:
-	-Running m-files requires matlab R2015 or newer
+- Optional: Matlab R2015 or newer requiret for running m-files
 
-# Installation
+# Automated installation
 
 1. Download and run Integrated-builder.py
-2. It will install itself and show instructions
+2. It will run autosetup and show more instructions
 
 
 # License
