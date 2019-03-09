@@ -9,14 +9,17 @@
 - Automatisize your work easily
 - Made for Windows operating system
 
-# Installation for Windows
+# Requirements
+- Windows OS
+- Python 3.x: https://www.python.org/downloads/
+- Sublime Text 3.x: https://www.sublimetext.com/3
+- Optional:
+	-Running m-files requires matlab R2015 or newer
 
-1. Make sure you have:
-	- Python 3.x: https://www.python.org/downloads/
-	- Sublime Text 3.x: https://www.sublimetext.com/3
+# Installation
 
-2. Download and run Integrated-builder.py
-3. It will install itself and show instructions
+1. Download and run Integrated-builder.py
+2. It will install itself and show instructions
 
 
 # License
