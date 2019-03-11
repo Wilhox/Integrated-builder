@@ -36,7 +36,7 @@ REQUIREMENTS
 
 https://se.mathworks.com/help/matlab/matlab_external/install-the-matlab-engine-for-python.html
 
-Press any key to intall, administrator rights are needed.
+Press enter to install, administrator rights are needed.
 ========================================================================
 '''
 
@@ -111,7 +111,7 @@ except ImportError:
                 print('>>>',rivi)
 
             #restart
-            input('Press any key to continue')
+            input('Press enter to continue')
             os.startfile(__file__)
             sys.exit()
 
