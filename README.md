@@ -17,7 +17,7 @@
 
 # Automated installation
 
-1. Download and run Integrated-builder.py
+1. Run a python file named Integrated-builder.py
 2. It will run autosetup and show more instructions
 
 
