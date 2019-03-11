@@ -2,13 +2,10 @@
 Integrated-builder v.2.0
 
 - Builder for Sublime Text 3
-- Compiles and runs c, pyw- and py-files
-- m-files will be automatically opened at matlab.
-- The file won´t be compiled, if there is no changes made after last run.
+- Compiles and runs c, pyw, py and m-files
 - Files with charters ä and ö will be compiled correctly.
 - Smarter error handling
 - Automatisize your work easily
-- Made for Windows operating system
 
 
 This is free software; you can redistribute it and/or modify
@@ -16,36 +13,24 @@ it. This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY;
 
 (C) 2019 Ville Lauronen <ville.lauronen(at)gmail.com>
-============================================================================
-"""
 
-INSTRUCTIONS = """
-INSTRUCTIONS
-1. Start a program named Sublime Text 3
-2. Activate Integrated-builder from tools > build system
-3. Use Sublime Text 3 to open your m, c, pyw- and py-files
-4. Compile and run your files by using a key binding Ctrl + B
 """
 
 
 INSTALLATION_INSTRUCTIONS = """
+
+-------REQUIREMENTS--------
+
+1. Windows OS
+2. Python 3.x: https://www.python.org/downloads/
+3. Sublime Text 3.x: https://www.sublimetext.com/3
+4. Optional: Matlab R2015 or newer requiret for running m-files
+
 ----MANUAL INSTALLATION----
 
-1. Do you have those programs intalled?
-
-   Python 3.x: https://www.python.org/downloads/
-   Sublime Text 3.x: https://www.sublimetext.com/3
-
-   >>If not, install them and run this scipt again.
-   		>>>The script will be installed automatically
-
-   >>Else, Automatic installation is failed. Continue reading.
-
-
-
-3. Start Sublime Text 3
-4. Create new build system: Tools > Build System > New Build System
-5. Copy a code below and paste it for file opened:
+1. Start Sublime Text 3
+2. Create new build system: Tools > Build System > New Build System
+3. Copy and paste code below:
 
 {
 	"cmd" : "python Integrated-builder.pyc \"${file_name}\" \"$file_path\" \"$file_base_name\",
@@ -55,16 +40,27 @@ INSTALLATION_INSTRUCTIONS = """
 }
 
 
-6. Save as: File > save As...
-7. Save as "Integrated-Builder" and copy a file path of the save location
-8. Replace  section <File_Paht> in code above by path you just copied
-9. Replace "\\" by "\\\\" on path copied.
+4. Save as: File > save As...
+5. Save as "Integrated-Builder" and copy a file path of the save location
+6. Replace  section <File_Paht> in code above by path you just copied
+7. Replace "\\" by "\\\\" on path copied.
    Example path: "C:\\\\Users\\\\user_name\\\\AppData\\\\Roaming\\\\Sublime Text 3\\\\Packages\\\\User"
 
-10. Save: File > save
-11. Move this file in same location
-12. Activate Integrated-builder from tools > build system
-13. Now you can use a key binding Ctrl + B to compile and run your files directly from Sublime Text 3
+8. Save: File > save
+9. Copy files named Integrated-builder.pyc and MatlabShell.pyc to same location
+10. Activate Integrated-builder from tools > build system
+"""
+
+
+INSTRUCTIONS = """
+
+INSTRUCTIONS
+
+1. Start a program named Sublime Text 3
+2. Activate Integrated-builder from tools > build system
+3. Use Sublime Text 3 to open your m, c, pyw- and py-files
+4. Compile and run your files by using a key binding Ctrl + B
+
 """
 
 
@@ -74,39 +70,30 @@ def PackageInstall(error):
 	- Downloads it automatically after five seconds.
 	- Restarts script
 	- Example:
-	try:
-	import numpy as np
-	import matplotlib.pyplot as plot
+		try:
+			import numpy as np
+			import matplotlib.pyplot as plot
 
-	except ImportError as error:
-	PackageInstall(error)
+		except ImportError as error:
+			PackageInstall(error)
 	"""
 	import time, subprocess, os, sys
 	module = str(error)[15:].replace('\'', '')
+	print(__doc__)
 	print('>>>',str(error))
 	print('>>> Downloading missing modules, please wait...')
 	print('>>> The scirpt may restart multiple times')
 	if 'win32com'in module or 'win32api' in module: #win32com and win32api must be installed as pywin32
 		module = 'pypiwin32'
-
-	output = subprocess.getoutput("pip install " + module)
-	for a in output.splitlines():
-		if 'NewConnectionError' in a:
-			print('>>>', a)
-			print('>>> CONNECTION FAILED')
-			input('>>> Press any key to try again')
-		elif 'No matching distribution found' in a:
-			print('>>>', a)
-			input('>>> Press enter to try again')
-
-	print('>>> Restarting...')
+	if subprocess.call("pip install " + module):
+		input('Press any key to continue')
 	time.sleep(1)
 	os.startfile(__file__)
 	sys.exit()
 
 
 try:
-	import os, logging, io, subprocess, sys, ctypes, py_compile
+	import os, logging, io, subprocess, sys, ctypes, py_compile, time
 except ImportError as e:
 	PackageInstall(e)
 except:
@@ -123,6 +110,7 @@ class build():
 
 	def __init__(self, file, path, base):
 		print_s('Integrated-builder v.2.0 [py, pyw, c, m]')
+		self.own_path = os.getcwd()
 		self.name = file
 		os.chdir(path) #toimitaan kohteen sijainnissa
 		self.path = path + '\\' + file
@@ -154,32 +142,23 @@ class build():
 	def runMatlab(self, file, path, base):
 		'''Run m-files'''
 		try:
-			import matlab.engine
 			try:
-				f = True
-				for a in matlab.engine.find_matlab():
-					if base == a:
-						print_s('>>> Connecting to Matlab session named "' + base + '"...')
-						engine = matlab.engine.connect_matlab(base)
-						f = False
-						break
-				if f:
-					print_s('>>> Creating a Matlab session named "' + base + '"...')
+				#matlab.engine is running as subprocess under sublime text
+				import matlab.engine
+				if not base in matlab.engine.find_matlab():
+					print_s('>>> Creating Matlab session named "' + base + '"...')
 					engine = matlab.engine.start_matlab()
 					getattr(engine, 'matlab.engine.shareEngine')(base, nargout=0)
 					engine.cd(path)
 
-				print_s('>>> Running...')
-				#engine.desktop(nargout = 0)
-				getattr(engine, base)(nargout=0)
-			except matlab.engine.MatlabExecutionError:
-				pass
-			print_s('>>> Ready')
-			input()
-		except ImportError:
-			print_s('>>> Matlab Plugin not installed')
-			print_s('>>> Starting matlab without desktop')
-			subprocess.call(["matlab", "-nodesktop", "-nosplash", "-r", base], shell=True)
+			except ImportError:
+				pass #Matlabshell will handle that
+
+			process = subprocess.Popen([sys.executable,
+					self.own_path + '\\MatlabShell.pyc',
+					base,
+					path],
+				creationflags = subprocess.CREATE_NEW_CONSOLE)
 		except:
 			logging.exception('Internal Error')
 
@@ -191,7 +170,6 @@ class build():
 			py_compile.compile(self.path, self.pybuild, doraise = True)
 			print_s('Starting...')
 			os.startfile('\"' + str(self.pybuild) + '\"')
-			print_s('Ready')
 
 		except py_compile.PyCompileError as error:
 			error = str(error).replace('  File "' + self.path + '", ', '')
@@ -307,7 +285,6 @@ class build():
 				#run
 				comm = '\"' + str(self.path).replace('.c', '.exe') + '\"'
 				os.startfile(comm)
-				print_s('ready')
 		except:
 			print_s('Sorry, the file can not be executed')
 			self.clear()
@@ -335,68 +312,17 @@ def autoSetup():
 		return 0 if failed
 	""" 
 
+	print('>>> Running autosetup...')
 	try:
-		import shutil, json, win32api, win32con, win32event, win32process
-		from win32com.shell.shell import ShellExecuteEx
-		from win32com.shell import shellcon
+		import shutil, json
 	except ImportError as e:
 		PackageInstall(e)
-
-	#Installing matlab plugin
-	try:
-		import matlab
-		print('>>> Matlab plugin is already installed')
-	except ImportError:
-		try:
-			matpath = os.environ['PROGRAMW6432'] + '\\MATLAB'
-
-			#find newest version
-			year = 0
-			version = 'b'
-			for folder in os.listdir(matpath):
-				folder = folder.replace('R', '')
-				try:
-					if int(folder[:-1]) > year:
-						year = int(folder[:-1])
-						version = folder[-1]
-				except:
-					pass
-			matpath = matpath + '\\R' + str(year) + version
-			print('>>> Matlab is installed on path ' + matpath)
-			print('>>> Matlab plugin is being insstalled...' + matpath)
-			matpath += '\\extern\\engines\\python'
-			os.chdir(matpath)
-
-			#administrator rights are needed
-			if ctypes.windll.shell32.IsUserAnAdmin():
-				feedback = subprocess.getoutput("python  setup.py install")
-				for rivi in feedback.splitlines():
-					print('>>>',rivi)
-			else: #elevate rights
-				process = ShellExecuteEx(
-					nShow = win32con.SW_SHOWNORMAL,
-					fMask = shellcon.SEE_MASK_NOCLOSEPROCESS,
-					lpVerb = 'runas',
-					lpFile = sys.executable,
-					lpParameters = __file__)
-				raise SystemExit
-
-		except FileNotFoundError:
-			print('>>> MATLAB not found from ' + matpath)
-			print('>>> MATLAB plugin not installed')
-		except SystemExit:
-			raise SystemExit
-		except:
-			logging.exception('>>> Can not install Matlab plugin')
-
 
 	#where is Sublime text?
 	path = os.environ['APPDATA']
 	for folder in os.listdir(path):
 		if str(folder) == 'Sublime Text 3':
 			path += '\\Sublime Text 3\\Packages\\User'
-
-
 			#Config data
 			data = {
 				"cmd" : "python Integrated-builder.pyc \"${file_name}\" \"$file_path\" \"$file_base_name\"",
@@ -410,15 +336,18 @@ def autoSetup():
 			file = io.open(filePath, 'w')
 			file.write(json.dumps(data, indent = True))
 			file.close()
+			print('>>> '+filePath+' created')
 
-			#copy
-			if __file__.endswith('.pyc'):
-				shutil.copy(__file__, path) #kopiodaan t\x84 m\x84  file oikeaan pathiinsa
-			else:
-				py_compile.compile(__file__, __file__.replace('.py', '.pyc'), doraise = True)
-				shutil.copy(__file__.replace('.py', '.pyc'), path) #kopiodaan t\x84 m\x84  file oikeaan pathiinsa
-			
-			print('>>> Integrated-builder is installed in ' + path)	
+			#copy files
+			for file in [__file__, 'MatlabShell.py']:
+				if file.endswith('.pyc'):
+					shutil.copy(file, path)
+					print('>>> '+file+' copied to '+path)
+				else:
+					py_compile.compile(file, file.replace('.py', '.pyc'), doraise = True)
+					shutil.copy(file.replace('.py', '.pyc'), path)
+					print('>>> '+file+' compiled and copied to '+path)
+
 			return 1
 
 	print('>>> Sublime Text 3 not found from ' + path)
@@ -427,10 +356,9 @@ def autoSetup():
 
 		
 if __name__ == "__main__":
-
 	if len(sys.argv) < 3: #The script is started without arguments -> Install
 		try:
-			print(__doc__)
+			print('Integrated-builder v.2.0\n')
 			if os.name != 'nt':
 				print('>>> UNSUPPORTED OPERATING SYSTEM')
 			elif autoSetup():
@@ -441,7 +369,7 @@ if __name__ == "__main__":
 			sys.exit()
 		except:
 			#Unknown issue, lest print more information
-			logging.exception('>>> AutoSetup Failed')
+			logging.exception('ERROR')
 			print(INSTALLATION_INSTRUCTIONS)
 		
 		input()
