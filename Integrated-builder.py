@@ -93,7 +93,7 @@ def PackageInstall(error):
 
 
 try:
-	import os, logging, io, subprocess, sys, ctypes, py_compile, time
+	import os, logging, io, subprocess, sys, ctypes, py_compile, time, socket, json
 except ImportError as e:
 	PackageInstall(e)
 except:
@@ -107,6 +107,7 @@ class build():
 	- Process code
 	- Run code
 	"""
+	port = 1235
 
 	def __init__(self, file, path, base):
 		print_s('Integrated-builder v.2.0 [py, pyw, c, m]')
@@ -142,25 +143,48 @@ class build():
 	def runMatlab(self, file, path, base):
 		'''Run m-files'''
 		try:
-			try:
-				#matlab.engine is running as subprocess under sublime text
-				import matlab.engine
-				if not base in matlab.engine.find_matlab():
-					print_s('>>> Creating Matlab session named "' + base + '"...')
-					engine = matlab.engine.start_matlab()
-					getattr(engine, 'matlab.engine.shareEngine')(base, nargout=0)
-					engine.cd(path)
-
-			except ImportError:
-				pass #Matlabshell will handle that
-
+			#connect to console already running
+			print_s('>>> Seeking MatlabShell...')
+			self.connectSocket(base, path)
+		except ConnectionRefusedError:
+			#create new console
+			print_s('>>> Starting MatlabShell...')
 			process = subprocess.Popen([sys.executable,
 					self.own_path + '\\MatlabShell.pyc',
+					path,
 					base,
-					path],
+					str(self.port)],
 				creationflags = subprocess.CREATE_NEW_CONSOLE)
+			time.sleep(3)
+
+		except json.decoder.JSONDecodeError:
+			print_s('>>> Internall Error when decoding received data')
 		except:
 			logging.exception('Internal Error')
+
+	def connectSocket(self, base, path):
+		host = socket.gethostname()  # get local machine name
+		connection = socket.socket()
+		connection.connect((host, self.port))
+		message = '!run('+ base+','+path+')'
+		connection.send(message.encode('utf-8'))
+		print_s('>>> MatlabShell is working...')
+		data = connection.recv(1024).decode('utf-8')
+		data = json.loads(data)
+		for a in data[0]:
+			sys.stdout.write(a)
+		if data[1] != []:
+			for a in data[1]:
+				try:
+					for b in a.splitlines():
+						if "run.m, line 91, in run" not in b and b != '':
+							if path in b:
+								b = b.replace('  File '+path+'\\'+base+'.m,', '>>> ERROR on')
+							sys.stdout.write(b+'\n')
+				except:
+					sys.stdout.write(str(a))
+		sys.stdout.flush()
+		connection.close()
 
 	def build_python(self, file_type):
 		'''Compile, get errors and run'''
@@ -173,7 +197,7 @@ class build():
 
 		except py_compile.PyCompileError as error:
 			error = str(error).replace('  File "' + self.path + '", ', '')
-			print('There is a bug on ', str(error))
+			print('There is a bug on', str(error))
 
 	def hideFile(self, file):
 		'''Hide a file by using windows file attributes'''
@@ -376,7 +400,7 @@ if __name__ == "__main__":
 
 	else: #The script is started with argumets, like Sublime text does
 		try:
-			builder = build(sys.argv[1], sys.argv[2], sys.argv[3])
+			builder = build(*sys.argv[1:])
 		except PermissionError:
 			print('PERMISSION DENIED (PermissionError)')
 			print('The most common reasons why you see that:')
